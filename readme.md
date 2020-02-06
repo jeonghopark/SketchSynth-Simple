@@ -40,8 +40,8 @@ It's made with openFrameworks C++ framework. - <a target="_blank" href="https://
 - Improve sound quality			
 - Node-style play function      		 	
 - User interface			
-- Support Windows 10					
-		
+- Default basic wavetable          
+
 ## Contact		
 Mail: jeonghopark (at) jeonghopark.de             
 <a target="_blank" href="https://jeonghopark.de">https://jeonghopark.de</a>             
