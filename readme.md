@@ -26,6 +26,8 @@ There will be more features and updates.
 ## Links
 <b>v0.0.1 Download (Mac OS Catalina - 10.15.3)</b> : [SketchSynth_Simple.app.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.1/SketchSynth_Simple.app.zip)				
 
+<b>v0.0.1 Download (Windows 10)</b> : [SketchSynth_Simple-Win.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.1/SketchSynth_Simple-Win.zip)				
+
 <b>Sourcecode</b> : [https://github.com/jeonghopark/SketchSynth-Simple](https://github.com/jeonghopark/SketchSynth-Simple)         
 !!! I'm an artist working with code. Not a real programmer. Maybe the source code is unusual. But it works. :-).            
 
