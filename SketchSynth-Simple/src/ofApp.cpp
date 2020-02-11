@@ -3,11 +3,14 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
-    #ifdef DEBUG
-    #else
-        ofSetDataPathRoot("../Resources/data");
-    #endif
-    
+
+#ifdef __APPLE_CC__
+#ifdef DEBUG
+#else
+    ofSetDataPathRoot("../Resources/data");
+#endif
+#endif
+
     ofSetFrameRate(60);
     ofBackground(0);
 
@@ -17,7 +20,11 @@ void ofApp::setup() {
     playZoneSize.set(1600, 514);
     waveTableSize.set(514, 514);
 
-    setGui();
+    defaultDeviceID = 0;
+    
+    setAudio(setAudioDevice());
+
+    setGui(audioInputDeviceList, defaultDeviceID);
 
     setupImage();
 
@@ -30,8 +37,6 @@ void ofApp::setup() {
 
     captureWaveTable();
     capturePlayZone();
-
-    setAudio();
 
     playPosition = 0;
 
@@ -50,9 +55,76 @@ void ofApp::openFileButtonPressed() {
 
 
 //--------------------------------------------------------------
-void ofApp::setGui() {
+ofSoundStreamSettings ofApp::setAudioDevice() {
 
+    ofSoundStreamSettings _settingsOuput;
+    vector<ofSoundDevice> _buffDev = soundStream.getDeviceList();
+
+    for (int i = 0; i < _buffDev.size(); i++) {
+        if (_buffDev.at(i).outputChannels > 0) {
+            audioInputDeviceList.push_back(_buffDev.at(i));
+        }
+    }
+
+#ifdef __APPLE_CC__
+
+    for (int i = 0; i < audioInputDeviceList.size(); i++) {
+        if (audioInputDeviceList.at(i).name == "Apple Inc.: Built-in Output") {
+            defaultDeviceID = i;
+            defaultInputDevice = audioInputDeviceList.at(i);
+        }
+	}
+
+#else
+
+    defaultDeviceID = 0;
+    defaultInputDevice = audioInputDeviceList.at(0);
+
+#endif
+
+    _settingsOuput.setOutDevice(defaultInputDevice);
+    return _settingsOuput;
+    
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setAudio(ofSoundStreamSettings settings) {
+    
+    int _chNum = defaultInputDevice.outputChannels;
+    settings.setOutListener(this);
+    settings.bufferSize = 512;
+    settings.sampleRate = 44100;
+    settings.numInputChannels = 0;
+    settings.numOutputChannels = _chNum;
+    soundStream.setup(settings);
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::deviceIDChanged(int & _deviceID){
+        
+    defaultInputDevice = audioInputDeviceList.at(_deviceID);
+
+    settings.setOutDevice(defaultInputDevice);
+
+    setAudio(settings);
+
+    string _name = defaultInputDevice.name;
+    int _i = _name.find(':');
+    _name.erase(_name.begin(), _name.begin() + _i + 2);
+
+    deviceNum.setName(_name);
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setGui(vector<ofSoundDevice> _d, int _id) {
+    
     openFileButton.addListener(this, &ofApp::openFileButtonPressed);
+    guiAudioDevice.addListener(this, &ofApp::deviceIDChanged);
 
     gui.setup();
 //    gui.setDefaultWidth(sidebarWidth * 0.8);
@@ -66,7 +138,32 @@ void ofApp::setGui() {
     gui.add(hifq.setup("Hi fq", 1800, 800, 4000));
     gui.add(lofq.setup("LO fq", 50, 20, 700));
     gui.add(volumeSlider.setup("Volume", 0.85, 0.0, 1.0));
+    
+	intDropdown = make_unique<ofxIntDropdown>(guiAudioDevice);
 
+#ifdef __APPLE_CC__
+
+    for (int i = 0; i < _d.size(); i++) {
+        string _name = _d.at(i).name;
+        int _i = _name.find(':');
+        _name.erase(_name.begin(), _name.begin() + _i + 2);
+        intDropdown->add(i, _name);
+    }
+
+#else
+
+	for (int i = 0; i < _d.size(); i++) {
+		string _name = _d.at(i).name;
+		intDropdown->add(i, _name.substr(0, 17).append("..."));
+	}
+
+#endif
+
+    intDropdown->disableMultipleSelection();
+    intDropdown->setDropDownPosition(intDropdown->DD_BELOW);
+    guiAudioDevice.set(0);
+    gui.add(intDropdown.get());
+    
 }
 
 
@@ -134,20 +231,6 @@ void ofApp::captureChar(ofPixels _p, unsigned char * _o, unsigned char * _b) {
     int _size = _p.size();
     memcpy(_o, _p.getData(), _size * sizeof(unsigned char));
     memcpy(_b, _p.getData(), _size * sizeof(unsigned char));
-
-}
-
-
-//--------------------------------------------------------------
-void ofApp::setAudio() {
-
-    ofSoundStreamSettings settings;
-    settings.setOutListener(this);
-    settings.bufferSize = 512;
-    settings.sampleRate = 44100;
-    settings.numInputChannels = 0;
-    settings.numOutputChannels = 2;
-    soundStream.setup(settings);
 
 }
 

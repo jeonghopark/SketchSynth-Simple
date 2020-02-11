@@ -1,3 +1,7 @@
+#ifndef __APPLE_CC__
+#pragma comment(linker, "/subsystem:windows /entry:mainCRTStartup")
+#endif
+
 #include "ofMain.h"
 #include "ofApp.h"
 

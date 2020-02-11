@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include "ofxDropdown.h"
 
 #define BIT 512
 
@@ -27,9 +28,17 @@ public:
 
     void generatAmpFq(float _plaPos);
     
-    void setAudio();
-    void setGui();
+    void setAudio(ofSoundStreamSettings settings);
     
+    ofSoundStreamSettings setAudioDevice();
+//	ofSoundStreamSettings setWinAudioDevice();
+    
+    void setGui(vector<ofSoundDevice> _d, int _id);
+    int defaultDeviceID;
+    ofSoundDevice defaultInputDevice;
+    vector<ofSoundDevice> audioInputDeviceList;
+    ofSoundStreamSettings settings;
+        
     float amplitude[BIT];
     int frequency[BIT];
     float phase[BIT];
@@ -77,8 +86,14 @@ public:
     ofxButton openFileButton;
     ofxToggle invertColorToggle;
     ofxFloatSlider volumeSlider;
-    
+    ofxIntSlider deviceID;
+    unique_ptr<ofxIntDropdown> intDropdown;
+    ofParameter<int> guiAudioDevice;
+
     void openFileButtonPressed();
+    void deviceIDChanged(int & _deviceID);
+    
+    ofParameter<int> deviceNum;
     
     void processOpenFileSelection(ofFileDialogResult openFileResult);
     ofImage loadedImageResize(string _parh);
