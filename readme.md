@@ -9,6 +9,9 @@
 
 <hr>		
 
+## Update        						
+- Changeable a size of the play zone       			
+
 ## Short description
 This is an experimental test app. It works like the UPIC of Iannis Xenakis or synthesizes images as sound. In particular, this application uses hand-drawn sketches to convert music and synthesizers.		
 
@@ -17,7 +20,8 @@ This is an experimental test app. It works like the UPIC of Iannis Xenakis or sy
 - Change the contrast parameters of the selected area      
 - Playing and stopping is by spacebar      
 - Optional parameters are speed, frequency, overlap        
-- Dropdown menu for audio out devices                 
+- Dropdown menu for audio out devices           
+- Changeable a size of the play zone       			
 
 A hand-drawn sketch image should be on the white background. If the background of the image is darker than a sketch, the 'Invert colors' option creates a better play and wavetable area.
 
@@ -39,7 +43,7 @@ Website : <a target="_blank" href="https://jeonghopark.de/sketchsynth">https://j
 It's made with openFrameworks C++ framework. - <a target="_blank" href="https://openframeworks.cc">https://openframeworks.cc</a>
 
 ## Upcoming features
-- Changeable a size of the play zone and the wavetable zone			
+- Changeable a size of the wavetable zone			
 - Improve sound quality			
 - Node-style play function      		 	
 - User interface			
