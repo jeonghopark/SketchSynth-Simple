@@ -33,16 +33,23 @@ void ofApp::setup() {
     playZoneScaledSize = playZoneSize / defaultImgWindowSizeRatio;
     waveTableScaledSize = waveTableSize / defaultImgWindowSizeRatio;
 
-    setDefaultBuffer();
+    playZone.set(97, 62, playZoneScaledSize.x, playZoneScaledSize.y);
+    setPlayZoneBuffer(playZone, playZoneSize);
+
+    waveTable.set(677, 96, waveTableScaledSize.x, waveTableScaledSize.x);
+    setWaveTableBuffer(waveTable, waveTableSize);
 
     captureWaveTable();
     capturePlayZone();
 
     playPosition = 0;
 
-    mouseOnWaveTableZone = false;
+    mouseOnWaveTable = false;
     mouseOnPlayZone = false;
-
+    
+    setPlayZoneFourCorner();
+    setWaveTableFourCorner();
+    
 }
 
 
@@ -123,6 +130,8 @@ void ofApp::deviceIDChanged(int & _deviceID){
 //--------------------------------------------------------------
 void ofApp::setGui(vector<ofSoundDevice> _d, int _id) {
     
+    ofAddListener(ofEvents().mouseReleased, this, &ofApp::mouseReleasedEvent, OF_EVENT_ORDER_BEFORE_APP);
+    
     openFileButton.addListener(this, &ofApp::openFileButtonPressed);
     guiAudioDevice.addListener(this, &ofApp::deviceIDChanged);
 
@@ -130,12 +139,12 @@ void ofApp::setGui(vector<ofSoundDevice> _d, int _id) {
 //    gui.setDefaultWidth(sidebarWidth * 0.8);
     gui.setPosition(sidebarPosX, 60);
 //    gui.add(openFileButton.setup("File Open"));
-    gui.add(thresholdPlayZone.setup("PlayZone Contrast", 0.59, 0, 1));
-    gui.add(thresholdWaveTable.setup("WaveTable Contrast", 0.59, 0, 1));
+    gui.add(thresholdPlayZone.setup("PlayZone Contrast", 0.52, 0, 1));
+    gui.add(thresholdWaveTable.setup("WaveTable Contrast", 0.515, 0, 1));
     gui.add(invertColorToggle.setup("Invert colors", false));
     gui.add(speed.setup("Speed", 2, 0.1, 10));
     gui.add(overlap.setup("Overlap", 4, 0.1, 20));
-    gui.add(hifq.setup("Hi fq", 1800, 800, 4000));
+    gui.add(hifq.setup("Hi fq", 5280, 800, 12000));
     gui.add(lofq.setup("LO fq", 50, 20, 700));
     gui.add(volumeSlider.setup("Volume", 0.85, 0.0, 1.0));
     
@@ -170,28 +179,32 @@ void ofApp::setGui(vector<ofSoundDevice> _d, int _id) {
 //--------------------------------------------------------------
 void ofApp::setupImage() {
 
-    defaultImg.load("c02.jpg"); // Default image size : 4032 x 3024
+    defaultImg.load("c03.jpeg"); // Default image size : 4032 x 3024
     defaultImg.setImageType(OF_IMAGE_COLOR_ALPHA);
 
 }
 
 
 //--------------------------------------------------------------
-void ofApp::setDefaultBuffer() {
+void ofApp::setWaveTableBuffer(ofRectangle waveTable, ofVec2f waveTableSize) {
 
     buffWaveTablePixels.allocate(waveTableSize.x, waveTableSize.y, OF_PIXELS_GRAY);
     textureWaveTable.allocate(buffWaveTablePixels);
 
+    waveTableChar = new unsigned char[int(waveTableSize.x * waveTableSize.y) * 4];
+    buffWaveTableChar = new unsigned char[int(waveTableSize.x * waveTableSize.y) * 4];
+    
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setPlayZoneBuffer(ofRectangle playZone, ofVec2f playZoneSize) {
+    
     buffPlayZonePixels.allocate(playZoneSize.x, playZoneSize.y, OF_PIXELS_GRAY);
     texturePlayZone.allocate(buffPlayZonePixels);
 
-    waveTableChar = new unsigned char[514 * 514 * 4];
-    buffWaveTableChar = new unsigned char[514 * 514 * 4];
-    playZoneChar = new unsigned char[1600 * 514 * 4];
-    buffPlayZoneChar = new unsigned char[1600 * 514 * 4];
-
-    waveTableZone.set(650, 190, waveTableScaledSize.x, waveTableScaledSize.x);
-    playZone.set(100, 50, playZoneScaledSize.x, playZoneScaledSize.y);
+    playZoneChar = new unsigned char[int(playZoneSize.x * playZoneSize.y) * 4];
+    buffPlayZoneChar = new unsigned char[int(playZoneSize.x * playZoneSize.y) * 4];
 
 }
 
@@ -199,8 +212,10 @@ void ofApp::setDefaultBuffer() {
 //--------------------------------------------------------------
 void ofApp::captureWaveTable() {
 
-    ofPixels _p = cropImageToPixels(waveTableZone, waveTableSize);
+    ofPixels _p = cropImageToPixels(waveTable, waveTableSize);
     captureChar(_p, waveTableChar, buffWaveTableChar);
+
+    buffWaveTablePixels = captureWaveTablePixels(waveTableChar, buffWaveTableChar);
 
 }
 
@@ -210,6 +225,35 @@ void ofApp::capturePlayZone() {
 
     ofPixels _p = cropImageToPixels(playZone, playZoneSize);
     captureChar(_p, playZoneChar, buffPlayZoneChar);
+
+    buffPlayZonePixels = capturePlayZonePixels(playZoneChar, buffPlayZoneChar);
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setPlayZoneFourCorner() {
+    
+    mouseOnPlayZoneRightBottom = false;
+    playZoneRightBottom.setFromCenter(playZone.getX() + playZone.getWidth(), playZone.getY() + playZone.getHeight(), 20, 20);
+
+    mouseOnPlayZoneRightTop = false;
+    playZoneRightTop.setFromCenter(playZone.getX() + playZone.getWidth(), playZone.getY(), 20, 20);
+
+    mouseOnPlayZoneLeftTop = false;
+    playZoneLeftTop.setFromCenter(playZone.getX(), playZone.getY(), 20, 20);
+
+    mouseOnPlayZoneLeftBottom = false;
+    playZoneLeftBottom.setFromCenter(playZone.getX(), playZone.getY() + playZone.getHeight(), 20, 20);
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setWaveTableFourCorner() {
+    
+    mouseOnWaveTableRightBottom = false;
+    waveTableRightBottom.setFromCenter(waveTable.getX() + waveTable.getWidth(), waveTable.getY() + waveTable.getHeight(), 20, 20);
 
 }
 
@@ -247,9 +291,9 @@ void ofApp::update() {
             playPosition = 0;
         }
     }
-
+    
     buffWaveTablePixels = captureWaveTablePixels(waveTableChar, buffWaveTableChar);
-    buffPlayZonePixels = capturePlayZonePixels(playZoneChar, buffPlayZoneChar);
+//    buffPlayZonePixels = capturePlayZonePixels(playZoneChar, buffPlayZoneChar);
 
 }
 
@@ -260,7 +304,7 @@ void ofApp::generatAmpFq(float _plaPos) {
     for (int n = 0; n < BIT; n++) {
         amplitude[n] = (amplitude[n] * overlap + getAmp(floor(_plaPos), n)) / (overlap + 1);
         //            frequency[n] = int(ofMap(n, 0, BIT, hifq, lofq));
-        frequency[n] = int(getFreq(n));;
+        frequency[n] = int(getFreq(n));
     }
 
 }
@@ -272,7 +316,8 @@ float ofApp::getAmp(float _xPos, float _yPos) {
     float _amp = 0;
 
     if (_yPos > 0 && _yPos < BIT) {
-        _amp = buffPlayZonePixels.getColor(_xPos, _yPos).getLightness() / 255.0;
+        float _yRatio = playZoneSize.y / BIT;
+        _amp = buffPlayZonePixels.getColor(_xPos, _yPos * _yRatio).getLightness() / 255.0;
     } else {
         _amp = 0;
     }
@@ -322,7 +367,7 @@ ofPixels ofApp::captureWaveTablePixels(unsigned char * _wtC, unsigned char * _bw
                 _height = j;
             }
 
-            waveTable[i] = ofMap(_height, 0, waveTableSize.y, -1, 1);
+            waveTableOsc[i] = ofMap(_height, 0, waveTableSize.y, -1, 1);
         }
     }
 
@@ -368,7 +413,7 @@ void ofApp::draw() {
 
     drawDefaultImage();
 
-    drawZone(mouseOnWaveTableZone, waveTableZone, ofColor(255, 0, 0, 255));
+    drawZone(mouseOnWaveTable, waveTable, ofColor(255, 0, 0, 255));
     drawZone(mouseOnPlayZone, playZone, ofColor(0, 255, 0, 255));
 
     drawPlaySpectrum();
@@ -376,7 +421,9 @@ void ofApp::draw() {
     displaySidebar();
 
     gui.draw();
-
+    
+    drawFourZone();
+    
 }
 
 
@@ -437,7 +484,7 @@ void ofApp::drawPlaySpectrum() {
         ofPushStyle();
 
         int _xStep = 4;
-        int _yStep = 10;
+        int _yStep = 10 / (playZoneSize.y / BIT);
         
         int _valueOffset = 50;
 
@@ -460,7 +507,7 @@ void ofApp::drawPlaySpectrum() {
         ofSetColor(0, 255 * 0.5, 0, 220);
         float _x = playZone.getX() + playPosition / defaultImgWindowSizeRatio;
         float _y = playZone.getY();
-        ofDrawLine(_x, _y, _x, _y + playZoneScaledSize.y);
+        ofDrawLine(_x, _y, _x, _y + playZone.getHeight());
 
         ofPopStyle();
     }
@@ -497,6 +544,84 @@ void ofApp::displaySidebar() {
 
 
 //--------------------------------------------------------------
+void ofApp::drawFourZone() {
+    
+    if (mouseOnPlayZoneRightBottom) {
+        drawCirclePart(playZoneRightBottom);
+        drawArrowPart(playZoneRightBottom, 0);
+        drawArrowPart(playZoneRightBottom, 90);
+    }
+
+    if (mouseOnPlayZoneRightTop) {
+        drawCirclePart(playZoneRightTop);
+        drawArrowPart(playZoneRightTop, 0);
+        drawArrowPart(playZoneRightTop, -90);
+    }
+
+    if (mouseOnPlayZoneLeftTop) {
+        drawCirclePart(playZoneLeftTop);
+        drawArrowPart(playZoneLeftTop, 180);
+        drawArrowPart(playZoneLeftTop, -90);
+    }
+
+    if (mouseOnPlayZoneLeftBottom) {
+        drawCirclePart(playZoneLeftBottom);
+        drawArrowPart(playZoneLeftBottom, 180);
+        drawArrowPart(playZoneLeftBottom, 90);
+    }
+    
+    if (mouseOnWaveTableRightBottom) {
+        drawCirclePart(waveTableRightBottom);
+        drawArrowPart(waveTableRightBottom, 0);
+        drawArrowPart(waveTableRightBottom, 90);
+    }
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::drawCirclePart(ofRectangle rect) {
+ 
+    ofPushMatrix();
+    ofPushStyle();
+
+    ofSetLineWidth(2);
+
+    ofSetColor(50, 140, 50, 20);
+    ofDrawCircle(rect.getCenter(), 10);
+
+    ofNoFill();
+    ofSetColor(50, 140, 50, 180);
+    ofDrawCircle(rect.getCenter(), 10);
+
+    ofPopStyle();
+    ofPopMatrix();
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::drawArrowPart(ofRectangle rect, float rotation) {
+
+    ofPushMatrix();
+    ofPushStyle();
+    
+    ofTranslate(rect.getCenter().x, rect.getCenter().y);
+    ofRotateZDeg(rotation);
+
+    ofSetColor(50, 140, 50, 255);
+    
+    ofVec3f _sR = ofVec3f(10, 0);
+    ofVec3f _eR = ofVec3f(20, 0);
+    ofDrawArrow(_sR, _eR, 3);
+    
+    ofPopStyle();
+    ofPopMatrix();
+
+}
+
+
+//--------------------------------------------------------------
 void ofApp::drawSidebarBackground() {
 
     ofPushStyle();
@@ -513,6 +638,8 @@ void ofApp::drawWaveTableTexture() {
     textureWaveTable.loadData(buffWaveTablePixels);
     textureWaveTable.draw(0, 0, waveTableScaledSize.x, waveTableScaledSize.y);
 
+    edgeRectangle(ofColor(255, 120), waveTableScaledSize);
+    
 }
 
 
@@ -529,11 +656,13 @@ void ofApp::drawWaveTableScope() {
     int _rectSize = 2;
 
     for (int w = 0; w < waveTableSize.y; w++) {
-        ofDrawRectangle(w / defaultImgWindowSizeRatio, ofMap(waveTable[w], -1, 1, 0, waveTableSize.y - _rectSize) / defaultImgWindowSizeRatio, _rectSize, _rectSize);
+        ofDrawRectangle(w / defaultImgWindowSizeRatio, ofMap(waveTableOsc[w], -1, 1, 0, waveTableSize.y - _rectSize) / defaultImgWindowSizeRatio, _rectSize, _rectSize);
     }
 
     ofPopStyle();
-
+    
+    edgeRectangle(ofColor(255, 120), waveTableScaledSize);
+    
 }
 
 
@@ -544,7 +673,36 @@ void ofApp::drawPlayZoneTexture() {
     float _playZoneH = (playZoneSize.y / playZoneSize.x) * sidebarWidth;
 
     texturePlayZone.loadData(buffPlayZonePixels);
-    texturePlayZone.draw(0, 0, _playZoneW, _playZoneH);
+    
+    float _w = texturePlayZone.getWidth();
+    float _h = texturePlayZone.getHeight();
+    
+    if (_w > sidebarWidth) {
+        _w = sidebarWidth;
+        _h = (playZoneSize.y / playZoneSize.x) * sidebarWidth;
+    }
+
+    float _texturePosY = gui.getHeight() + gui.getPosition().y + 4 + waveTableScaledSize.y + 4 + waveTableScaledSize.y + 4;
+    if (_h > ofGetHeight() - _texturePosY) {
+        _h = ofGetHeight() - _texturePosY;
+        _w = (playZoneSize.x / playZoneSize.y) * (ofGetHeight() - _texturePosY);
+    }
+    
+    texturePlayZone.draw(0, 0, _w, _h);
+
+    edgeRectangle(ofColor(255, 120), ofVec2f(_w, _h));
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::edgeRectangle(ofColor _c, ofVec2f _v) {
+    
+    ofPushStyle();
+    ofNoFill();
+    ofSetColor(_c);
+    ofDrawRectangle(0, 0, _v.x, _v.y);
+    ofPopStyle();
 
 }
 
@@ -591,7 +749,7 @@ void ofApp::audioOut(ofSoundBuffer & buffer) {
                 }
 
                 remainder = phase[n] - floor(phase[n]);
-                output += ((1 - remainder) * waveTable[1 + (long)phase[n]] + remainder * waveTable[2 + (long)phase[n]]) * amplitude[n];
+                output += ((1 - remainder) * waveTableOsc[1 + (long)phase[n]] + remainder * waveTableOsc[2 + (long)phase[n]]) * amplitude[n];
             }
 
             output /= 20.0;
@@ -739,17 +897,60 @@ ofFbo ofApp::loadedImageFBO(ofImage _img) {
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
 
-    if (waveTableZone.inside(x, y)) {
-        mouseOnWaveTableZone = true;
+    if (waveTable.inside(x, y)) {
+        mouseOnWaveTable = true;
     } else {
-        mouseOnWaveTableZone = false;
+        mouseOnWaveTable = false;
     }
-
-    if (!mouseOnWaveTableZone && playZone.inside(x, y)) {
+    
+    if (!mouseOnWaveTable && playZone.inside(x, y)) {
         mouseOnPlayZone = true;
     } else {
         mouseOnPlayZone = false;
     }
+    
+    if (playZoneLeftTop.inside(x, y)) {
+        mouseOnPlayZoneLeftTop = true;
+        playZoneWaveTableMouseOff();
+    } else {
+        mouseOnPlayZoneLeftTop = false;
+    }
+
+    if (playZoneLeftBottom.inside(x, y)) {
+        mouseOnPlayZoneLeftBottom = true;
+        playZoneWaveTableMouseOff();
+    } else {
+        mouseOnPlayZoneLeftBottom = false;
+    }
+
+    if (playZoneRightTop.inside(x, y)) {
+        mouseOnPlayZoneRightTop = true;
+        playZoneWaveTableMouseOff();
+    } else {
+        mouseOnPlayZoneRightTop = false;
+    }
+
+    if (playZoneRightBottom.inside(x, y)) {
+        mouseOnPlayZoneRightBottom = true;
+        playZoneWaveTableMouseOff();
+    } else {
+        mouseOnPlayZoneRightBottom = false;
+    }
+
+    if (waveTableRightBottom.inside(x, y)) {
+        mouseOnWaveTableRightBottom = true;
+    } else {
+        mouseOnWaveTableRightBottom = false;
+    }
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::playZoneWaveTableMouseOff() {
+    
+    mouseOnWaveTable = false;
+    mouseOnPlayZone = false;
 
 }
 
@@ -757,16 +958,252 @@ void ofApp::mouseMoved(int x, int y) {
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button) {
 
-    if (mouseOnWaveTableZone) {
-        ofVec2f _vW = limitMouseDrag(x, y, waveTableZone, waveTableClickPos);
-        waveTableZone.setPosition(_vW.x, _vW.y);
+    if (mouseOnWaveTable) {
+        ofVec2f _vW = limitMouseDrag(x, y, waveTable, waveTableClickPos);
+        waveTable.setPosition(_vW.x, _vW.y);
+
+        float _xRB = _vW.x + waveTable.getWidth();
+        float _yRB = _vW.y + waveTable.getHeight();
+        waveTableRightBottom.setFromCenter(_xRB, _yRB, 20, 20);
     }
 
     if (mouseOnPlayZone) {
         ofVec2f _vP = limitMouseDrag(x, y, playZone, playZoneclickPos);
         playZone.setPosition(_vP.x, _vP.y);
+        
+        setAllFourCorner(_vP);
+    }
+            
+    if (x < 20) {
+        x = 20;
+    }
+    if (x > sidebarPosX - 20) {
+        x = sidebarPosX - 20;
+    }
+    if (y < 20) {
+        y = 20;
+    }
+    if (y > ofGetHeight() - 20) {
+        y = ofGetHeight() - 20;
     }
 
+    if (mouseOnPlayZoneLeftTop) {
+        allResetByLeftTop(setSmallSizeOffsetLeftTop(x, y));
+    }
+    
+    if (mouseOnPlayZoneLeftBottom) {
+        allResetByLeftBottom(setSmallSizeOffsetLeftBottom(x, y));
+    }
+    
+    if (mouseOnPlayZoneRightTop && x < sidebarPosX && y > 0) {
+        allResetByRightTop(setSmallSizeOffsetRightTop(x, y));
+    }
+    
+    if (mouseOnPlayZoneRightBottom && x < sidebarPosX && y < ofGetHeight()) {
+        allResetByRightBottom(setSmallSizeOffsetRightBottom(x, y));
+    }
+    
+    if (mouseOnWaveTableRightBottom && x < sidebarPosX && y < ofGetHeight()) {
+        float _offsetY = waveTable.getPosition().y + 100 / defaultImgWindowSizeRatio;
+        if (y < _offsetY) {
+            y = _offsetY;
+        }
+        
+        float _offsetX = waveTable.getPosition().x + 100 / defaultImgWindowSizeRatio;
+        if (x < _offsetX) {
+            x = _offsetX;
+        }
+        
+        waveTable.set(waveTable.getPosition(), x - waveTable.getPosition().x, y - waveTable.getPosition().y);
+        waveTableRightBottom.setFromCenter(x, y, 20, 20);
+    }
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::setAllFourCorner(ofVec2f _vP) {
+    
+    float _xLT = _vP.x;
+    float _yLT = _vP.y;
+    playZoneLeftTop.setFromCenter(_xLT, _yLT, 20, 20);
+
+    float _xLB = _vP.x;
+    float _yLB = _vP.y + playZone.getHeight();
+    playZoneLeftBottom.setFromCenter(_xLB, _yLB, 20, 20);
+
+    float _xRT = _vP.x + playZone.getWidth();
+    float _yRT = _vP.y;
+    playZoneRightTop.setFromCenter(_xRT, _yRT, 20, 20);
+
+    float _xRB = _vP.x + playZone.getWidth();
+    float _yRB = _vP.y + playZone.getHeight();
+    playZoneRightBottom.setFromCenter(_xRB, _yRB, 20, 20);
+    
+}
+
+
+//--------------------------------------------------------------
+ofVec2f ofApp::setSmallSizeOffsetLeftTop(float x, float y) {
+    
+    float _x;
+    float _y;
+    
+    float _offsetX = playZone.getPosition().x + playZone.getWidth() - 100 / defaultImgWindowSizeRatio;
+    if (x >= _offsetX) {
+        _x = _offsetX;
+    } else {
+        _x = x;
+    }
+
+    float _offsetY = playZone.getPosition().y + playZone.getHeight() - 100 / defaultImgWindowSizeRatio;
+    if (y >= _offsetY) {
+        _y = _offsetY;
+    } else {
+        _y = y;
+    }
+
+    return ofVec2f(_x, _y);
+    
+}
+
+
+//--------------------------------------------------------------
+ofVec2f ofApp::setSmallSizeOffsetLeftBottom(float x, float y) {
+
+    float _x;
+    float _y;
+    
+    float _offsetX = playZone.getPosition().x + playZone.getWidth() - 100 / defaultImgWindowSizeRatio;
+    if (x >= _offsetX) {
+        _x = _offsetX;
+    } else {
+        _x = x;
+    }
+
+    float _offsetY = playZone.getPosition().y + 100 / defaultImgWindowSizeRatio;
+    if (y <= _offsetY) {
+        _y = _offsetY;
+    } else {
+        _y = y;
+    }
+
+    return ofVec2f(_x, _y);
+    
+}
+
+
+//--------------------------------------------------------------
+ofVec2f ofApp::setSmallSizeOffsetRightTop(float x, float y) {
+
+    float _x;
+    float _y;
+    
+    float _offsetX = playZone.getPosition().x + 100 / defaultImgWindowSizeRatio;;
+    if (x <= _offsetX) {
+        _x = _offsetX;
+    } else {
+        _x = x;
+    }
+
+    float _offsetY = playZone.getPosition().y + playZone.getHeight() - 100 / defaultImgWindowSizeRatio;
+    if (y >= _offsetY) {
+        _y = _offsetY;
+    } else {
+        _y = y;
+    }
+
+    return ofVec2f(_x, _y);
+    
+}
+
+
+//--------------------------------------------------------------
+ofVec2f ofApp::setSmallSizeOffsetRightBottom(float x, float y) {
+
+    float _x;
+    float _y;
+    
+    float _offsetX = playZone.getPosition().x + 100 / defaultImgWindowSizeRatio;
+    if (x <= _offsetX) {
+        _x = _offsetX;
+    } else {
+        _x = x;
+    }
+
+    float _offsetY = playZone.getPosition().y + 100 / defaultImgWindowSizeRatio;
+    if (y <= _offsetY) {
+        _y = _offsetY;
+    } else {
+        _y = y;
+    }
+
+    return ofVec2f(_x, _y);
+    
+}
+
+
+
+//--------------------------------------------------------------
+void ofApp::allResetByLeftTop(ofVec2f _v) {
+    float x = _v.x;
+    float y = _v.y;
+    
+    playZoneLeftTop.setFromCenter(x, y, 20, 20);
+    playZoneLeftBottom.setFromCenter(x, y + playZone.getHeight(), 20, 20);
+    playZoneRightTop.setFromCenter(x + playZone.getWidth(), y, 20, 20);
+    playZoneRightBottom.setFromCenter(x + playZone.getWidth(), y + playZone.getHeight(), 20, 20);
+
+    playZone.set(x, y, playZone.getPosition().x + playZone.getWidth() - x, playZone.getHeight() + playZone.getPosition().y - y);
+    
+}
+
+
+//--------------------------------------------------------------
+void ofApp::allResetByLeftBottom(ofVec2f _v) {
+
+    float x = _v.x;
+    float y = _v.y;
+
+    playZoneLeftTop.setFromCenter(x, y - playZone.getHeight(), 20, 20);
+    playZoneLeftBottom.setFromCenter(x, y, 20, 20);
+    playZoneRightBottom.setFromCenter(x + playZone.getWidth(), y, 20, 20);
+    playZoneRightTop.setFromCenter(x + playZone.getWidth(), y - playZone.getHeight(), 20, 20);
+
+    playZone.set(x, playZone.getPosition().y, playZone.getPosition().x + playZone.getWidth() - x, y - playZone.getPosition().y);
+    
+}
+
+
+//--------------------------------------------------------------
+void ofApp::allResetByRightTop(ofVec2f _v) {
+    
+    float x = _v.x;
+    float y = _v.y;
+    
+    playZoneLeftTop.setFromCenter(x - playZone.getWidth(), y, 20, 20);
+    playZoneLeftBottom.setFromCenter(x - playZone.getWidth(), y + playZone.getHeight(), 20, 20);
+    playZoneRightTop.setFromCenter(x, y, 20, 20);
+    playZoneRightBottom.setFromCenter(x, y + playZone.getHeight(), 20, 20);
+
+    playZone.set(playZone.getPosition().x, y, x - playZone.getPosition().x, playZone.getHeight() + playZone.getPosition().y - y);
+    
+}
+
+
+//--------------------------------------------------------------
+void ofApp::allResetByRightBottom(ofVec2f _v) {
+    
+    float x = _v.x;
+    float y = _v.y;
+    
+    playZoneLeftTop.setFromCenter(x - playZone.getWidth(), y - playZone.getHeight(), 20, 20);
+    playZoneLeftBottom.setFromCenter(x - playZone.getWidth(), y, 20, 20);
+    playZoneRightTop.setFromCenter(x, y - playZone.getHeight(), 20, 20);
+    playZoneRightBottom.setFromCenter(x, y, 20, 20);
+
+    playZone.set(playZone.getPosition(), x - playZone.getPosition().x, y - playZone.getPosition().y);
+    
 }
 
 
@@ -775,16 +1212,16 @@ ofVec2f ofApp::limitMouseDrag(int x, int y, ofRectangle _r, ofVec2f _clickPos) {
 
     ofVec2f _pos = ofVec2f(x - _clickPos.x, y - _clickPos.y);
 
-    if (_pos.x < 0) {
-        _pos = ofVec2f(0, _pos.y);
-    } else if (_pos.x + _r.getWidth() > sidebarPosX) {
-        _pos = ofVec2f(sidebarPosX - _r.getWidth(), _pos.y);
+    if (_pos.x < 20) {
+        _pos = ofVec2f(20, _pos.y);
+    } else if (_pos.x + _r.getWidth() > sidebarPosX - 20) {
+        _pos = ofVec2f(sidebarPosX - 20 - _r.getWidth(), _pos.y);
     }
 
-    if (_pos.y < 0) {
-        _pos = ofVec2f(_pos.x, 0);
-    } else if (_pos.y + _r.getHeight() > ofGetHeight()) {
-        _pos = ofVec2f(_pos.x, ofGetHeight() - _r.getHeight());
+    if (_pos.y < 20) {
+        _pos = ofVec2f(_pos.x, 20);
+    } else if (_pos.y + _r.getHeight() > ofGetHeight() - 20) {
+        _pos = ofVec2f(_pos.x, ofGetHeight() - 20 - _r.getHeight());
     }
 
     return _pos;
@@ -796,30 +1233,133 @@ ofVec2f ofApp::limitMouseDrag(int x, int y, ofRectangle _r, ofVec2f _clickPos) {
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button) {
 
-    if (mouseOnWaveTableZone) {
-        waveTableClickPos = ofVec2f(x, y) - waveTableZone.getPosition();
+    if (mouseOnWaveTable) {
+        waveTableClickPos = ofVec2f(x, y) - waveTable.getPosition();
     }
 
     if (mouseOnPlayZone) {
         playZoneclickPos = ofVec2f(x, y) - playZone.getPosition();
     }
 
+    if (playZoneLeftTop.inside(x, y)) {
+        mouseOnPlayZoneLeftTop = true;
+    }
+
+    if (playZoneLeftBottom.inside(x, y)) {
+        mouseOnPlayZoneLeftBottom = true;
+    }
+
+    if (playZoneRightTop.inside(x, y)) {
+        mouseOnPlayZoneRightTop = true;
+    }
+
+    if (playZoneRightBottom.inside(x, y)) {
+        mouseOnPlayZoneRightBottom = true;
+    }
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::mouseReleasedEvent(ofMouseEventArgs & mouse){
+    
+    if (thresholdPlayZone.mouseReleased(mouse)) {
+        capturePlayZone();
+    }
+
+//    if (thresholdWaveTable.mouseReleased(mouse)) {
+//        captureWaveTable();
+//    }
+
 }
 
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button) {
+            
+    if (x < 20) {
+        x = 20;
+    }
+    if (x > sidebarPosX - 20) {
+        x = sidebarPosX - 20;
+    }
+    if (y < 20) {
+        y = 20;
+    }
+    if (y > ofGetHeight() - 20) {
+        y = ofGetHeight() - 20;
+    }
 
-    if (waveTableZone.inside(x, y)) {
-        mouseOnWaveTableZone = false;
+    if (waveTable.inside(x, y)) {
+        mouseOnWaveTable = false;
         captureWaveTable();
     }
 
-    if (playZone.inside(x, y)) {
+    if ((x <= 20 || y <= 20 || x >= sidebarPosX - 20 || y >= ofGetHeight() - 20) && mouseOnPlayZone) {
         mouseOnPlayZone = false;
         playPosition = 0;
         capturePlayZone();
     }
+    if (playZone.inside(x, y) && mouseOnPlayZone) {
+        mouseOnPlayZone = false;
+        playPosition = 0;
+        capturePlayZone();
+    }
+
+    bool _checkIn = x <= 20 || y <= 20 || x >= sidebarPosX - 20 || y >= ofGetHeight() - 20;
+    
+    if (mouseOnPlayZoneLeftTop) {
+        mouseOnPlayZoneLeftTop = false;
+        playPosition = 0;
+        allResetByLeftTop(setSmallSizeOffsetLeftTop(x, y));
+        resetPlayZoneAll();
+    }
+    
+    if (mouseOnPlayZoneLeftBottom) {
+        mouseOnPlayZoneLeftBottom = false;
+        playPosition = 0;
+        allResetByLeftBottom(setSmallSizeOffsetLeftBottom(x, y));
+        resetPlayZoneAll();
+    }
+    
+    if (mouseOnPlayZoneRightTop) {
+        mouseOnPlayZoneRightTop = false;
+        playPosition = 0;
+        allResetByRightTop(setSmallSizeOffsetRightTop(x, y));
+        resetPlayZoneAll();
+    }
+    
+    if (mouseOnPlayZoneRightBottom) {
+        mouseOnPlayZoneRightBottom = false;
+        playPosition = 0;
+        allResetByRightBottom(setSmallSizeOffsetRightBottom(x, y));
+        resetPlayZoneAll();
+    }
+        
+    if (waveTableRightBottom.inside(x, y) && mouseOnWaveTableRightBottom) {
+        waveTableRightBottom.setFromCenter(x, y, 20, 20);
+        resetWaveTableAll();
+    }
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::resetPlayZoneAll() {
+    
+    playZoneSize.set(playZone.getWidth() * defaultImgWindowSizeRatio, playZone.getHeight() * defaultImgWindowSizeRatio);
+    setPlayZoneBuffer(playZone, playZoneSize);
+    capturePlayZone();
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::resetWaveTableAll() {
+    
+    waveTableSize.set(waveTable.getWidth() * defaultImgWindowSizeRatio, waveTable.getHeight() * defaultImgWindowSizeRatio);
+    setWaveTableBuffer(waveTable, waveTableSize);
+    captureWaveTable();
 
 }
 

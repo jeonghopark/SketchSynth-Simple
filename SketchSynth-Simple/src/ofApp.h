@@ -54,17 +54,17 @@ public:
     
     float defaultImgWindowSizeRatio;
     
-    float waveTable[514];
+    float waveTableOsc[514];
             
     ofPixels buffPlayZonePixels;
     ofPixels buffWaveTablePixels;
     
     float playPosition;
     
-    ofRectangle waveTableZone;
+    ofRectangle waveTable;
     ofRectangle playZone;
     
-    bool mouseOnWaveTableZone;
+    bool mouseOnWaveTable;
     bool mouseOnPlayZone;
     
     ofTexture texturePlayZone;
@@ -113,7 +113,8 @@ public:
     ofVec2f waveTableSize;
     ofVec2f waveTableScaledSize;
 
-    void setDefaultBuffer();
+    void setPlayZoneBuffer(ofRectangle playZone, ofVec2f playZoneSize);
+    void setWaveTableBuffer(ofRectangle waveTable, ofVec2f waveTableSize);
     
     void displaySidebar();
     void drawSidebarBackground();
@@ -141,5 +142,44 @@ public:
     void drawInfo();
     
     ofVec2f limitMouseDrag(int x, int y, ofRectangle _r, ofVec2f _clickPos);
+  
+    ofRectangle playZoneRightBottom;
+    ofRectangle playZoneRightTop;
+    ofRectangle playZoneLeftTop;
+    ofRectangle playZoneLeftBottom;
+    bool mouseOnPlayZoneRightBottom;
+    bool mouseOnPlayZoneRightTop;
+    bool mouseOnPlayZoneLeftTop;
+    bool mouseOnPlayZoneLeftBottom;
+
+    void drawFourZone();
+    void drawCirclePart(ofRectangle rect);
+    void drawArrowPart(ofRectangle rect, float rotation);
+    
+    void resetPlayZoneAll();
+    void resetWaveTableAll();
+    
+    ofRectangle waveTableRightBottom;
+    bool mouseOnWaveTableRightBottom;
+
+    void setPlayZoneFourCorner();
+    void setWaveTableFourCorner();
+    
+    void edgeRectangle(ofColor _c, ofVec2f _v);
+    
+    void allResetByLeftTop(ofVec2f _v);
+    void allResetByLeftBottom(ofVec2f _v);
+    void allResetByRightTop(ofVec2f _v);
+    void allResetByRightBottom(ofVec2f _v);
+
+    ofVec2f setSmallSizeOffsetLeftTop(float x, float y);
+    ofVec2f setSmallSizeOffsetLeftBottom(float x, float y);
+    ofVec2f setSmallSizeOffsetRightTop(float x, float y);
+    ofVec2f setSmallSizeOffsetRightBottom(float x, float y);
+
+    void playZoneWaveTableMouseOff();
+    void setAllFourCorner(ofVec2f _v);
+    
+    void mouseReleasedEvent(ofMouseEventArgs & mouse);
     
 };
