@@ -31,9 +31,9 @@ There will be more features and updates.
 <link href="https://fonts.googleapis.com/css?family=Arial" rel="stylesheet"><a class="bmc-button" target="_blank" href="https://www.buymeacoffee.com/c4KbpP0oa"><img src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg" alt="Buy me a coffee"><span style="margin-left:15px;font-size:16px !important;">Buy me a coffee</span></a>
 
 ## Links
-<b>v0.0.2 Download (Mac OS Catalina - 10.15.3)</b> : [SketchSynth_Simple.app.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.2/SketchSynth_Simple-mac-v0.0.2.app.zip)				
+<b>v0.0.3 Download (Mac OS Catalina - 10.15.4)</b> : [SketchSynth_Simple.app.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.3/SketchSynth_Simple_mac_app.zip)				
 
-<b>v0.0.2 Download (Windows 10)</b> : [SketchSynth_Simple-Win.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.2/SketchSynth_Simple-win-v0.0.2.zip)				
+<b>v0.0.3 Download (Windows 10)</b> : [SketchSynth_Simple-Win.zip](https://github.com/jeonghopark/SketchSynth-Simple/releases/download/v0.0.3/SketchSynth_Simple_win_v0.0.3.zip)				
 
 <b>Sourcecode</b> : [https://github.com/jeonghopark/SketchSynth-Simple](https://github.com/jeonghopark/SketchSynth-Simple)         
 !!! I'm an artist working with code. Not a real programmer. Maybe the source code is unusual. But it works. :-).            
