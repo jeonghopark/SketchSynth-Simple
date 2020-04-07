@@ -48,7 +48,6 @@ void ofApp::setup() {
     mouseOnPlayZone = false;
     
     setPlayZoneFourCorner();
-    setWaveTableFourCorner();
     
 }
 
@@ -245,15 +244,6 @@ void ofApp::setPlayZoneFourCorner() {
 
     mouseOnPlayZoneLeftBottom = false;
     playZoneLeftBottom.setFromCenter(playZone.getX(), playZone.getY() + playZone.getHeight(), 20, 20);
-
-}
-
-
-//--------------------------------------------------------------
-void ofApp::setWaveTableFourCorner() {
-    
-    mouseOnWaveTableRightBottom = false;
-    waveTableRightBottom.setFromCenter(waveTable.getX() + waveTable.getWidth(), waveTable.getY() + waveTable.getHeight(), 20, 20);
 
 }
 
@@ -568,12 +558,6 @@ void ofApp::drawFourZone() {
         drawCirclePart(playZoneLeftBottom);
         drawArrowPart(playZoneLeftBottom, 180);
         drawArrowPart(playZoneLeftBottom, 90);
-    }
-    
-    if (mouseOnWaveTableRightBottom) {
-        drawCirclePart(waveTableRightBottom);
-        drawArrowPart(waveTableRightBottom, 0);
-        drawArrowPart(waveTableRightBottom, 90);
     }
 
 }
@@ -937,12 +921,6 @@ void ofApp::mouseMoved(int x, int y) {
         mouseOnPlayZoneRightBottom = false;
     }
 
-    if (waveTableRightBottom.inside(x, y)) {
-        mouseOnWaveTableRightBottom = true;
-    } else {
-        mouseOnWaveTableRightBottom = false;
-    }
-
 }
 
 
@@ -961,10 +939,6 @@ void ofApp::mouseDragged(int x, int y, int button) {
     if (mouseOnWaveTable) {
         ofVec2f _vW = limitMouseDrag(x, y, waveTable, waveTableClickPos);
         waveTable.setPosition(_vW.x, _vW.y);
-
-        float _xRB = _vW.x + waveTable.getWidth();
-        float _yRB = _vW.y + waveTable.getHeight();
-        waveTableRightBottom.setFromCenter(_xRB, _yRB, 20, 20);
     }
 
     if (mouseOnPlayZone) {
@@ -1001,21 +975,6 @@ void ofApp::mouseDragged(int x, int y, int button) {
     
     if (mouseOnPlayZoneRightBottom && x < sidebarPosX && y < ofGetHeight()) {
         allResetByRightBottom(setSmallSizeOffsetRightBottom(x, y));
-    }
-    
-    if (mouseOnWaveTableRightBottom && x < sidebarPosX && y < ofGetHeight()) {
-        float _offsetY = waveTable.getPosition().y + 100 / defaultImgWindowSizeRatio;
-        if (y < _offsetY) {
-            y = _offsetY;
-        }
-        
-        float _offsetX = waveTable.getPosition().x + 100 / defaultImgWindowSizeRatio;
-        if (x < _offsetX) {
-            x = _offsetX;
-        }
-        
-        waveTable.set(waveTable.getPosition(), x - waveTable.getPosition().x, y - waveTable.getPosition().y);
-        waveTableRightBottom.setFromCenter(x, y, 20, 20);
     }
 
 }
@@ -1335,11 +1294,6 @@ void ofApp::mouseReleased(int x, int y, int button) {
         allResetByRightBottom(setSmallSizeOffsetRightBottom(x, y));
         resetPlayZoneAll();
     }
-        
-    if (waveTableRightBottom.inside(x, y) && mouseOnWaveTableRightBottom) {
-        waveTableRightBottom.setFromCenter(x, y, 20, 20);
-        resetWaveTableAll();
-    }
 
 }
 
@@ -1350,16 +1304,6 @@ void ofApp::resetPlayZoneAll() {
     playZoneSize.set(playZone.getWidth() * defaultImgWindowSizeRatio, playZone.getHeight() * defaultImgWindowSizeRatio);
     setPlayZoneBuffer(playZone, playZoneSize);
     capturePlayZone();
-
-}
-
-
-//--------------------------------------------------------------
-void ofApp::resetWaveTableAll() {
-    
-    waveTableSize.set(waveTable.getWidth() * defaultImgWindowSizeRatio, waveTable.getHeight() * defaultImgWindowSizeRatio);
-    setWaveTableBuffer(waveTable, waveTableSize);
-    captureWaveTable();
 
 }
 

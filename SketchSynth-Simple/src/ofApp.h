@@ -157,13 +157,7 @@ public:
     void drawArrowPart(ofRectangle rect, float rotation);
     
     void resetPlayZoneAll();
-    void resetWaveTableAll();
-    
-    ofRectangle waveTableRightBottom;
-    bool mouseOnWaveTableRightBottom;
-
     void setPlayZoneFourCorner();
-    void setWaveTableFourCorner();
     
     void edgeRectangle(ofColor _c, ofVec2f _v);
     
